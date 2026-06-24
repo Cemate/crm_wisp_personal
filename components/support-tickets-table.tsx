@@ -151,4 +151,3 @@ function PriorityBadge({ priority }: { priority: string }) {
       return <Badge variant="outline">{priority}</Badge>
   }
 }
-

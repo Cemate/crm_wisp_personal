@@ -97,4 +97,3 @@ export async function deletePayment(id: string) {
 
   return true
 }
-

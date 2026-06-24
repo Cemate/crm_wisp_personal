@@ -79,4 +79,3 @@ export async function deleteClient(id: string) {
 
   return true
 }
-

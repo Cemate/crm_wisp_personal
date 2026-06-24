@@ -19,4 +19,3 @@ export function DashboardHeader({ heading, text, children, className }: Dashboar
     </div>
   )
 }
-

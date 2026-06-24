@@ -12,4 +12,3 @@ export function ResponsiveTable({ children, className, ...props }: ResponsiveTab
     </div>
   )
 }
-

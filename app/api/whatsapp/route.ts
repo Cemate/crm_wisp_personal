@@ -103,4 +103,3 @@ function processActionsFromResponse(text: string, client: any) {
 
   return actions
 }
-

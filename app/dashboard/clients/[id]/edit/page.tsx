@@ -192,4 +192,3 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
     </DashboardShell>
   )
 }
-

@@ -341,4 +341,3 @@ export async function GET() {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 })
   }
 }
-

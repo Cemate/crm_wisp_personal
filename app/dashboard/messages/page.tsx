@@ -10,7 +10,15 @@ import { LucideSearch, LucideUsers, LucideCheck, LucidePlus, LucideFilter } from
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
-export default function MessagesPage() {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const { tab } = await searchParams
+  const validTabs = ["conversations", "templates", "campaigns", "settings"]
+  const defaultTab = tab && validTabs.includes(tab) ? tab : "conversations"
+
   return (
     <DashboardShell>
       <DashboardHeader heading="Mensajes" text="Gestiona las comunicaciones con tus clientes">
@@ -26,7 +34,7 @@ export default function MessagesPage() {
         </div>
       </DashboardHeader>
 
-      <Tabs defaultValue="conversations" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="conversations">Conversaciones</TabsTrigger>
           <TabsTrigger value="templates">Plantillas</TabsTrigger>
@@ -518,4 +526,3 @@ export default function MessagesPage() {
     </DashboardShell>
   )
 }
-

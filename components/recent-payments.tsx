@@ -56,4 +56,3 @@ export function RecentPayments() {
     </div>
   )
 }
-

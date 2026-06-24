@@ -379,7 +379,9 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline">Configurar</Button>
+                    <Button variant="outline" asChild>
+                      <Link href="/dashboard/messages?tab=templates">Configurar</Link>
+                    </Button>
                     <Button variant="outline">Desconectar</Button>
                   </div>
                 </div>
@@ -585,4 +587,3 @@ export default function SettingsPage() {
     </DashboardShell>
   )
 }
-

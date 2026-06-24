@@ -101,4 +101,3 @@ export async function deleteVisit(id: string) {
 
   return true
 }
-

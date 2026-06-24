@@ -97,4 +97,3 @@ export async function deleteTicket(id: string) {
 
   return true
 }
-

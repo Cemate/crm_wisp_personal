@@ -26,4 +26,3 @@ export const getSupabase = () => {
 
 // Para compatibilidad con código existente
 export const supabase = getSupabase()
-

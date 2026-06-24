@@ -187,4 +187,3 @@ async function VisitCountByStatus({ supabase, status }: { supabase: any; status:
 
   return count || 0
 }
-

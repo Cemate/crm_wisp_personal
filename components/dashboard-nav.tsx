@@ -75,4 +75,3 @@ export function DashboardNav({ className, isCollapsed, ...props }: NavProps) {
     </nav>
   )
 }
-
