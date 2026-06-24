@@ -9,11 +9,9 @@ import { LucidePlus, LucideCalendarPlus } from "lucide-react"
 import { SupportTicketsTable } from "@/components/support-tickets-table"
 import { VisitsTable } from "@/components/visits-table"
 import { createClient } from "@/lib/supabase/server"
-import { cookies } from "next/headers"
 
 export default async function SupportPage() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = await createClient()
 
   return (
     <DashboardShell>
