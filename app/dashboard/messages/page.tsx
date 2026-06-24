@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { LucideSearch, LucideUsers, LucideCheck, LucidePlus, LucideFilter } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { sampleTemplates, sampleCampaigns } from "@/lib/sample-messages-data"
 
 export default async function MessagesPage({
   searchParams,
@@ -27,9 +29,11 @@ export default async function MessagesPage({
             <LucideFilter className="mr-2 h-4 w-4" />
             Filtrar
           </Button>
-          <Button>
-            <LucidePlus className="mr-2 h-4 w-4" />
-            Nuevo Mensaje
+          <Button asChild>
+            <Link href="/dashboard/messages/new">
+              <LucidePlus className="mr-2 h-4 w-4" />
+              Nuevo Mensaje
+            </Link>
           </Button>
         </div>
       </DashboardHeader>
@@ -215,9 +219,11 @@ export default async function MessagesPage({
                   <CardTitle>Plantillas de Mensajes</CardTitle>
                   <CardDescription>Crea y gestiona plantillas para comunicaciones automáticas</CardDescription>
                 </div>
-                <Button>
-                  <LucidePlus className="mr-2 h-4 w-4" />
-                  Nueva Plantilla
+                <Button asChild>
+                  <Link href="/dashboard/messages/templates/new">
+                    <LucidePlus className="mr-2 h-4 w-4" />
+                    Nueva Plantilla
+                  </Link>
                 </Button>
               </div>
             </CardHeader>
@@ -234,39 +240,8 @@ export default async function MessagesPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        name: "Recordatorio de Pago",
-                        type: "Pago",
-                        content: "Hola [nombre], te recordamos que tu pago vence el [fecha]...",
-                        status: "Activo",
-                      },
-                      {
-                        name: "Confirmación de Pago",
-                        type: "Pago",
-                        content: "Hola [nombre], hemos recibido tu pago por $[monto]...",
-                        status: "Activo",
-                      },
-                      {
-                        name: "Aviso de Corte",
-                        type: "Pago",
-                        content: "Hola [nombre], tu servicio será suspendido por falta de pago...",
-                        status: "Activo",
-                      },
-                      {
-                        name: "Bienvenida",
-                        type: "Onboarding",
-                        content: "¡Bienvenido a [empresa]! Gracias por confiar en nosotros...",
-                        status: "Activo",
-                      },
-                      {
-                        name: "Soporte Técnico",
-                        type: "Soporte",
-                        content: "Hola [nombre], lamentamos los inconvenientes con tu servicio...",
-                        status: "Activo",
-                      },
-                    ].map((template, i) => (
-                      <tr key={i} className="border-b">
+                    {sampleTemplates.map((template) => (
+                      <tr key={template.id} className="border-b">
                         <td className="p-2 text-sm">{template.name}</td>
                         <td className="p-2 text-sm">{template.type}</td>
                         <td className="p-2 text-sm truncate max-w-[200px]">{template.content}</td>
@@ -277,11 +252,11 @@ export default async function MessagesPage({
                         </td>
                         <td className="p-2 text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="outline" size="sm">
-                              Editar
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/dashboard/messages/templates/${template.id}/edit`}>Editar</Link>
                             </Button>
-                            <Button variant="outline" size="sm">
-                              Ver
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/dashboard/messages/templates/${template.id}`}>Ver</Link>
                             </Button>
                           </div>
                         </td>
@@ -302,9 +277,11 @@ export default async function MessagesPage({
                   <CardTitle>Campañas de Mensajes</CardTitle>
                   <CardDescription>Crea y gestiona campañas de comunicación masiva</CardDescription>
                 </div>
-                <Button>
-                  <LucidePlus className="mr-2 h-4 w-4" />
-                  Nueva Campaña
+                <Button asChild>
+                  <Link href="/dashboard/messages/campaigns/new">
+                    <LucidePlus className="mr-2 h-4 w-4" />
+                    Nueva Campaña
+                  </Link>
                 </Button>
               </div>
             </CardHeader>
@@ -322,44 +299,8 @@ export default async function MessagesPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        name: "Recordatorio Mensual",
-                        type: "Pago",
-                        recipients: "245",
-                        status: "Programada",
-                        date: "01/04/2025",
-                      },
-                      {
-                        name: "Promoción Upgrade",
-                        type: "Marketing",
-                        recipients: "120",
-                        status: "Completada",
-                        date: "15/03/2025",
-                      },
-                      {
-                        name: "Mantenimiento Programado",
-                        type: "Informativa",
-                        recipients: "245",
-                        status: "Completada",
-                        date: "10/03/2025",
-                      },
-                      {
-                        name: "Encuesta de Satisfacción",
-                        type: "Feedback",
-                        recipients: "200",
-                        status: "Borrador",
-                        date: "-",
-                      },
-                      {
-                        name: "Nuevos Planes",
-                        type: "Marketing",
-                        recipients: "245",
-                        status: "Programada",
-                        date: "10/04/2025",
-                      },
-                    ].map((campaign, i) => (
-                      <tr key={i} className="border-b">
+                    {sampleCampaigns.map((campaign) => (
+                      <tr key={campaign.id} className="border-b">
                         <td className="p-2 text-sm">{campaign.name}</td>
                         <td className="p-2 text-sm">{campaign.type}</td>
                         <td className="p-2 text-sm">{campaign.recipients}</td>
@@ -379,11 +320,11 @@ export default async function MessagesPage({
                         <td className="p-2 text-sm">{campaign.date}</td>
                         <td className="p-2 text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="outline" size="sm">
-                              Editar
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/dashboard/messages/campaigns/${campaign.id}/edit`}>Editar</Link>
                             </Button>
-                            <Button variant="outline" size="sm">
-                              Ver
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/dashboard/messages/campaigns/${campaign.id}`}>Ver</Link>
                             </Button>
                           </div>
                         </td>
