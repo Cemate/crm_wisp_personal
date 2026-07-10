@@ -29,6 +29,7 @@ export type MockClient = {
   status: string
   notes: string | null
   coordinates: any | null
+  additional_services: string[]
   created_at: string
   updated_at: string
   plans?: MockPlan | null
@@ -146,6 +147,7 @@ export const mockClients: MockClient[] = [
     status: "active",
     notes: "Cliente desde enero 2024. Instalación sin problemas.",
     coordinates: { lat: 19.432608, lng: -99.133209 },
+    additional_services: ["router-premium", "soporte-prioritario"],
     created_at: "2024-01-15T10:00:00.000Z",
     updated_at: now,
   },
@@ -166,6 +168,7 @@ export const mockClients: MockClient[] = [
     status: "active",
     notes: "Cliente premium.",
     coordinates: { lat: 20.659699, lng: -103.349609 },
+    additional_services: ["ip-fija"],
     created_at: "2024-02-20T10:00:00.000Z",
     updated_at: now,
   },
@@ -186,6 +189,7 @@ export const mockClients: MockClient[] = [
     status: "suspended",
     notes: "Pago pendiente del mes actual.",
     coordinates: { lat: 25.686613, lng: -100.316116 },
+    additional_services: [],
     created_at: "2024-03-10T10:00:00.000Z",
     updated_at: now,
   },
@@ -206,6 +210,7 @@ export const mockClients: MockClient[] = [
     status: "active",
     notes: "",
     coordinates: { lat: 19.041297, lng: -98.206199 },
+    additional_services: ["router-premium"],
     created_at: "2024-04-05T10:00:00.000Z",
     updated_at: now,
   },

@@ -14,6 +14,7 @@ import Link from "next/link"
 import { LucideArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/services/client-service"
+import { createPayment } from "@/lib/services/payment-service"
 import { getActivePlans } from "@/lib/services/plan-service"
 import { useToast } from "@/hooks/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -55,6 +56,9 @@ export default function NewClientPage() {
     status: "active",
   })
 
+  const selectedPlanPrice = Number(plans.find((p) => p.id === formData.plan_id)?.price) || 0
+  const firstPaymentTotal = selectedPlanPrice + monthlyExtras + oneTimeExtras
+
   // Cargar planes activos al montar el componente
   useState(() => {
     const loadPlans = async () => {
@@ -88,10 +92,48 @@ export default function NewClientPage() {
     setIsLoading(true)
 
     try {
-      await createClient(formData)
+      // Crear el cliente con los servicios adicionales seleccionados
+      const newClient = await createClient({ ...formData, additional_services: selectedServices } as any)
+
+      // Generar automáticamente el primer pago pendiente:
+      // cargo único (instalación, etc.) + primer mes (plan + servicios recurrentes)
+      const selectedPlan = plans.find((p) => p.id === formData.plan_id)
+      const planPrice = Number(selectedPlan?.price) || 0
+      const firstPaymentAmount = planPrice + monthlyExtras + oneTimeExtras
+
+      if (firstPaymentAmount > 0) {
+        const today = new Date()
+        const periodStart = today.toISOString().slice(0, 10)
+        const periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
+          .toISOString()
+          .slice(0, 10)
+        const conceptos = [
+          selectedPlan ? `Plan ${selectedPlan.name}` : null,
+          oneTimeExtras > 0 ? "Instalación / cargos únicos" : null,
+          monthlyExtras > 0 ? "Servicios adicionales" : null,
+        ]
+          .filter(Boolean)
+          .join(" + ")
+
+        await createPayment({
+          client_id: newClient.id,
+          amount: firstPaymentAmount,
+          payment_date: periodStart,
+          due_date: periodStart,
+          method: formData.payment_method || "Pendiente",
+          status: "pending",
+          period_start: periodStart,
+          period_end: periodEnd,
+          notes: `Primer pago (${conceptos})`,
+        } as any)
+      }
+
       toast({
         title: "Cliente creado",
-        description: "El cliente ha sido creado exitosamente",
+        description:
+          firstPaymentAmount > 0
+            ? `Cliente creado. Se generó el primer pago pendiente por $${firstPaymentAmount.toFixed(2)}.`
+            : "El cliente ha sido creado exitosamente",
       })
       router.push("/dashboard/clients")
     } catch (error) {
@@ -299,16 +341,28 @@ export default function NewClientPage() {
                   </label>
                 ))}
               </div>
-              {selectedServices.length > 0 && (
-                <div className="rounded-md border bg-muted/30 p-4 text-sm">
+              {(selectedServices.length > 0 || selectedPlanPrice > 0) && (
+                <div className="space-y-1.5 rounded-md border bg-muted/30 p-4 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Cargo único (instalación, etc.)</span>
-                    <span className="font-medium">${oneTimeExtras.toFixed(2)}</span>
+                    <span className="text-muted-foreground">Plan de internet</span>
+                    <span className="font-medium">${selectedPlanPrice.toFixed(2)}/mes</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Servicios recurrentes</span>
                     <span className="font-medium">${monthlyExtras.toFixed(2)}/mes</span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Cargo único (instalación, etc.)</span>
+                    <span className="font-medium">${oneTimeExtras.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-2 font-semibold">
+                    <span>Primer pago (se generará como pendiente)</span>
+                    <span>${firstPaymentTotal.toFixed(2)}</span>
+                  </div>
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    El cargo único solo se incluye en este primer pago. Los pagos siguientes serán de $
+                    {(selectedPlanPrice + monthlyExtras).toFixed(2)}/mes.
+                  </p>
                 </div>
               )}
             </div>

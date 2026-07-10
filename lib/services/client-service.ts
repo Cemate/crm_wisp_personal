@@ -41,6 +41,7 @@ export async function createClient(client: ClientInsert) {
     status: client.status ?? "active",
     notes: client.notes ?? null,
     coordinates: client.coordinates ?? null,
+    additional_services: (client as any).additional_services ?? [],
     created_at: nowIso,
     updated_at: nowIso,
   }
