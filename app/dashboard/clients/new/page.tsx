@@ -16,12 +16,28 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/services/client-service"
 import { getActivePlans } from "@/lib/services/plan-service"
 import { useToast } from "@/hooks/use-toast"
+import { Checkbox } from "@/components/ui/checkbox"
+import { availableAdditionalServices, formatServicePrice } from "@/lib/mock-additional-services"
 
 export default function NewClientPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
+
+  const toggleService = (id: string) => {
+    setSelectedServices((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
+  }
+
+  const monthlyExtras = availableAdditionalServices
+    .filter((s) => selectedServices.includes(s.id) && s.billing === "monthly")
+    .reduce((sum, s) => sum + s.price, 0)
+
+  const oneTimeExtras = availableAdditionalServices
+    .filter((s) => selectedServices.includes(s.id) && s.billing === "once")
+    .reduce((sum, s) => sum + s.price, 0)
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -252,6 +268,49 @@ export default function NewClientPage() {
                   </Select>
                 </div>
               </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium">Servicios Adicionales</h3>
+                <p className="text-sm text-muted-foreground">
+                  Selecciona los servicios extra que el cliente contratará junto a su plan.
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {availableAdditionalServices.map((service) => (
+                  <label
+                    key={service.id}
+                    htmlFor={`service-${service.id}`}
+                    className="flex cursor-pointer items-start gap-3 rounded-md border p-3 hover:bg-muted/50"
+                  >
+                    <Checkbox
+                      id={`service-${service.id}`}
+                      checked={selectedServices.includes(service.id)}
+                      onCheckedChange={() => toggleService(service.id)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 space-y-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium">{service.name}</span>
+                        <span className="text-sm font-semibold">{formatServicePrice(service)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{service.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {selectedServices.length > 0 && (
+                <div className="rounded-md border bg-muted/30 p-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Cargo único (instalación, etc.)</span>
+                    <span className="font-medium">${oneTimeExtras.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Servicios recurrentes</span>
+                    <span className="font-medium">${monthlyExtras.toFixed(2)}/mes</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Información Adicional</h3>

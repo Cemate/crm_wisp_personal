@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,6 +10,8 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { LucideArrowLeft } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { availableAdditionalServices, formatServicePrice } from "@/lib/mock-additional-services"
 
 export default function EditClientPage({ params }: { params: { id: string } }) {
   // En una aplicación real, obtendríamos los datos del cliente desde una API o base de datos
@@ -28,7 +33,19 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
     paymentMethod: "card",
     notes: "Cliente desde enero 2024. Instalación sin problemas.",
     idNumber: "ABC123456",
+    // Servicios adicionales que el cliente ya tiene contratados (mock)
+    additionalServices: ["router-premium", "soporte-prioritario"],
   }
+
+  const [selectedServices, setSelectedServices] = useState<string[]>(client.additionalServices)
+
+  const toggleService = (id: string) => {
+    setSelectedServices((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))
+  }
+
+  const monthlyExtras = availableAdditionalServices
+    .filter((s) => selectedServices.includes(s.id) && s.billing === "monthly")
+    .reduce((sum, s) => sum + s.price, 0)
 
   return (
     <DashboardShell>
@@ -143,6 +160,45 @@ export default function EditClientPage({ params }: { params: { id: string } }) {
                 </Select>
               </div>
             </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">Servicios Adicionales</h3>
+              <p className="text-sm text-muted-foreground">
+                Agrega o quita servicios extra contratados por el cliente.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {availableAdditionalServices.map((service) => (
+                <label
+                  key={service.id}
+                  htmlFor={`service-${service.id}`}
+                  className="flex cursor-pointer items-start gap-3 rounded-md border p-3 hover:bg-muted/50"
+                >
+                  <Checkbox
+                    id={`service-${service.id}`}
+                    checked={selectedServices.includes(service.id)}
+                    onCheckedChange={() => toggleService(service.id)}
+                    className="mt-0.5"
+                  />
+                  <div className="flex-1 space-y-0.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium">{service.name}</span>
+                      <span className="text-sm font-semibold">{formatServicePrice(service)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{service.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            {selectedServices.length > 0 && (
+              <div className="rounded-md border bg-muted/30 p-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Servicios recurrentes adicionales</span>
+                  <span className="font-medium">${monthlyExtras.toFixed(2)}/mes</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Estado de la Cuenta</h3>

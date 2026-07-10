@@ -17,7 +17,9 @@ import {
   LucideMail,
   LucideDownload,
   LucideAlertCircle,
+  LucidePackage,
 } from "lucide-react"
+import { additionalServices, formatServicePrice } from "@/lib/mock-additional-services"
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
   // En una aplicación real, obtendríamos los datos del cliente desde una API o base de datos
@@ -39,7 +41,17 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     paymentMethod: "Tarjeta",
     notes: "Cliente desde enero 2024. Instalación sin problemas.",
     coordinates: { lat: 19.432608, lng: -99.133209 },
+    // Servicios adicionales contratados (mock)
+    additionalServices: ["router-premium", "soporte-prioritario"],
+    planPrice: 500,
   }
+
+  // Servicios contratados por el cliente y total recurrente adicional
+  const contractedServices = additionalServices.filter((s) => client.additionalServices.includes(s.id))
+  const monthlyExtras = contractedServices
+    .filter((s) => s.billing === "monthly")
+    .reduce((sum, s) => sum + s.price, 0)
+  const totalMonthly = client.planPrice + monthlyExtras
 
   // Historial de pagos simulado
   const paymentHistory = [
@@ -169,6 +181,32 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Servicios Adicionales Contratados</h3>
+                  {contractedServices.length > 0 ? (
+                    <div className="rounded-md border divide-y">
+                      {contractedServices.map((service) => (
+                        <div key={service.id} className="flex items-center justify-between p-3">
+                          <div className="flex items-start gap-2">
+                            <LucidePackage className="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">{service.name}</p>
+                              <p className="text-xs text-muted-foreground">{service.description}</p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-medium whitespace-nowrap">
+                            {formatServicePrice(service)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Este cliente no tiene servicios adicionales contratados.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -413,8 +451,18 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                   <span className="text-sm">{client.nextPayment}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Monto</span>
-                  <span className="text-sm font-bold">{client.amount}</span>
+                  <span className="text-sm text-muted-foreground">Plan de internet</span>
+                  <span className="text-sm">${client.planPrice.toFixed(2)}</span>
+                </div>
+                {monthlyExtras > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Servicios adicionales</span>
+                    <span className="text-sm">${monthlyExtras.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-t pt-2">
+                  <span className="text-sm font-medium">Monto Mensual</span>
+                  <span className="text-sm font-bold">${totalMonthly.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Método de Pago</span>

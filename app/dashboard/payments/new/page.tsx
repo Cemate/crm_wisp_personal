@@ -17,6 +17,7 @@ import { createPayment } from "@/lib/services/payment-service"
 import { getClients, getClientById } from "@/lib/services/client-service"
 import { useToast } from "@/hooks/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
+import { availableAdditionalServices, formatServicePrice } from "@/lib/mock-additional-services"
 
 export default function NewPaymentPage() {
   const router = useRouter()
@@ -27,6 +28,7 @@ export default function NewPaymentPage() {
   const [clients, setClients] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [formData, setFormData] = useState({
     client_id: "",
     amount: "",
@@ -86,6 +88,22 @@ export default function NewPaymentPage() {
 
   const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData((prev) => ({ ...prev, [name]: checked }))
+  }
+
+  const recalcAmount = (serviceIds: string[]) => {
+    const planPrice = Number(selectedClient?.plans?.price) || 0
+    const extras = availableAdditionalServices
+      .filter((s) => serviceIds.includes(s.id))
+      .reduce((sum, s) => sum + s.price, 0)
+    setFormData((prev) => ({ ...prev, amount: (planPrice + extras).toFixed(2) }))
+  }
+
+  const toggleService = (id: string) => {
+    setSelectedServices((prev) => {
+      const next = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+      recalcAmount(next)
+      return next
+    })
   }
 
   const handleClientSelect = async (id: string) => {
@@ -295,6 +313,45 @@ export default function NewPaymentPage() {
                         value={formData.reference}
                         onChange={handleChange}
                       />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Conceptos de Cobro</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Incluye servicios adicionales en este pago. El monto se actualiza automáticamente.
+                  </p>
+                  <div className="rounded-md border divide-y">
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Plan de Internet</span>
+                        <span className="text-xs text-muted-foreground">{selectedClient.plans?.name || "Sin plan"}</span>
+                      </div>
+                      <span className="text-sm font-medium">
+                        ${Number(selectedClient.plans?.price || 0).toFixed(2)}
+                      </span>
+                    </div>
+                    {availableAdditionalServices.map((service) => (
+                      <label
+                        key={service.id}
+                        htmlFor={`pay-service-${service.id}`}
+                        className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-muted/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id={`pay-service-${service.id}`}
+                            checked={selectedServices.includes(service.id)}
+                            onCheckedChange={() => toggleService(service.id)}
+                          />
+                          <span className="text-sm">{service.name}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{formatServicePrice(service)}</span>
+                      </label>
+                    ))}
+                    <div className="flex items-center justify-between bg-muted/30 p-3">
+                      <span className="text-sm font-semibold">Total</span>
+                      <span className="text-sm font-bold">${Number(formData.amount || 0).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
