@@ -1,81 +1,51 @@
-import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
+import { mockPlans, genId, type MockPlan } from "@/lib/mock-data"
 
 export type Plan = Database["public"]["Tables"]["plans"]["Row"]
 export type PlanInsert = Database["public"]["Tables"]["plans"]["Insert"]
 export type PlanUpdate = Database["public"]["Tables"]["plans"]["Update"]
 
 export async function getPlans() {
-  const { data, error } = await supabase.from("plans").select("*").order("price", { ascending: true })
-
-  if (error) {
-    console.error("Error fetching plans:", error)
-    throw error
-  }
-
-  return data
+  return [...mockPlans].sort((a, b) => a.price - b.price)
 }
 
 export async function getActivePlans() {
-  const { data, error } = await supabase
-    .from("plans")
-    .select("*")
-    .eq("is_active", true)
-    .order("price", { ascending: true })
-
-  if (error) {
-    console.error("Error fetching active plans:", error)
-    throw error
-  }
-
-  return data
+  return mockPlans.filter((p) => p.is_active).sort((a, b) => a.price - b.price)
 }
 
 export async function getPlanById(id: string) {
-  const { data, error } = await supabase.from("plans").select("*").eq("id", id).single()
-
-  if (error) {
-    console.error(`Error fetching plan with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  return mockPlans.find((p) => p.id === id) ?? null
 }
 
 export async function createPlan(plan: PlanInsert) {
-  const { data, error } = await supabase.from("plans").insert(plan).select().single()
-
-  if (error) {
-    console.error("Error creating plan:", error)
-    throw error
+  const nowIso = new Date().toISOString()
+  const newPlan: MockPlan = {
+    id: genId("plan"),
+    name: plan.name,
+    speed: plan.speed,
+    price: plan.price,
+    description: plan.description ?? null,
+    is_active: plan.is_active ?? true,
+    created_at: nowIso,
+    updated_at: nowIso,
   }
-
-  return data
+  mockPlans.push(newPlan)
+  return newPlan
 }
 
 export async function updatePlan(id: string, plan: PlanUpdate) {
-  const { data, error } = await supabase
-    .from("plans")
-    .update({ ...plan, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`Error updating plan with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  const index = mockPlans.findIndex((p) => p.id === id)
+  if (index === -1) throw new Error(`Plan with id ${id} not found`)
+  mockPlans[index] = {
+    ...mockPlans[index],
+    ...plan,
+    updated_at: new Date().toISOString(),
+  } as MockPlan
+  return mockPlans[index]
 }
 
 export async function deletePlan(id: string) {
-  const { error } = await supabase.from("plans").delete().eq("id", id)
-
-  if (error) {
-    console.error(`Error deleting plan with id ${id}:`, error)
-    throw error
-  }
-
+  const index = mockPlans.findIndex((p) => p.id === id)
+  if (index !== -1) mockPlans.splice(index, 1)
   return true
 }

@@ -1,99 +1,72 @@
-import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
+import { mockPayments, findClient, genId, type MockPayment } from "@/lib/mock-data"
 
 export type Payment = Database["public"]["Tables"]["payments"]["Row"]
 export type PaymentInsert = Database["public"]["Tables"]["payments"]["Insert"]
 export type PaymentUpdate = Database["public"]["Tables"]["payments"]["Update"]
 
+function withClient(payment: MockPayment): MockPayment {
+  return { ...payment, clients: findClient(payment.client_id) }
+}
+
 export async function getPayments() {
-  const { data, error } = await supabase
-    .from("payments")
-    .select("*, clients(*)")
-    .order("payment_date", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching payments:", error)
-    throw error
-  }
-
-  return data
+  return mockPayments
+    .map(withClient)
+    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
 }
 
 export async function getPaymentsByClientId(clientId: string) {
-  const { data, error } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("client_id", clientId)
-    .order("payment_date", { ascending: false })
-
-  if (error) {
-    console.error(`Error fetching payments for client ${clientId}:`, error)
-    throw error
-  }
-
-  return data
+  return mockPayments
+    .filter((p) => p.client_id === clientId)
+    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
 }
 
 export async function getPaymentsByStatus(status: string) {
-  const { data, error } = await supabase
-    .from("payments")
-    .select("*, clients(*)")
-    .eq("status", status)
-    .order("payment_date", { ascending: false })
-
-  if (error) {
-    console.error(`Error fetching payments with status ${status}:`, error)
-    throw error
-  }
-
-  return data
+  return mockPayments
+    .filter((p) => p.status === status)
+    .map(withClient)
+    .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
 }
 
 export async function getPaymentById(id: string) {
-  const { data, error } = await supabase.from("payments").select("*, clients(*)").eq("id", id).single()
-
-  if (error) {
-    console.error(`Error fetching payment with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  const payment = mockPayments.find((p) => p.id === id)
+  return payment ? withClient(payment) : null
 }
 
 export async function createPayment(payment: PaymentInsert) {
-  const { data, error } = await supabase.from("payments").insert(payment).select().single()
-
-  if (error) {
-    console.error("Error creating payment:", error)
-    throw error
+  const nowIso = new Date().toISOString()
+  const newPayment: MockPayment = {
+    id: genId("payment"),
+    client_id: payment.client_id,
+    amount: payment.amount,
+    payment_date: payment.payment_date,
+    due_date: payment.due_date,
+    method: payment.method,
+    reference: payment.reference ?? null,
+    status: payment.status ?? "paid",
+    period_start: payment.period_start ?? null,
+    period_end: payment.period_end ?? null,
+    notes: payment.notes ?? null,
+    created_at: nowIso,
+    updated_at: nowIso,
   }
-
-  return data
+  mockPayments.unshift(newPayment)
+  return newPayment
 }
 
 export async function updatePayment(id: string, payment: PaymentUpdate) {
-  const { data, error } = await supabase
-    .from("payments")
-    .update({ ...payment, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`Error updating payment with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  const index = mockPayments.findIndex((p) => p.id === id)
+  if (index === -1) throw new Error(`Payment with id ${id} not found`)
+  mockPayments[index] = {
+    ...mockPayments[index],
+    ...payment,
+    updated_at: new Date().toISOString(),
+  } as MockPayment
+  return mockPayments[index]
 }
 
 export async function deletePayment(id: string) {
-  const { error } = await supabase.from("payments").delete().eq("id", id)
-
-  if (error) {
-    console.error(`Error deleting payment with id ${id}:`, error)
-    throw error
-  }
-
+  const index = mockPayments.findIndex((p) => p.id === id)
+  if (index !== -1) mockPayments.splice(index, 1)
   return true
 }

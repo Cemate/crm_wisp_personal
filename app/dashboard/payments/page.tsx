@@ -17,30 +17,19 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createServerClient } from "@/lib/supabase/server"
 import { getPayments, getPaymentsByStatus } from "@/lib/services/payment-service"
 
 export const revalidate = 0
 
 export default async function PaymentsPage() {
-  const supabase = createServerClient()
-
-  // Obtener estadísticas de pagos
-  const { data: paymentsStats } = await supabase.from("payments").select("status, amount", { count: "exact" })
-
-  const totalPayments = paymentsStats?.length || 0
-  const totalAmount = paymentsStats?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
-  const averageAmount = totalPayments > 0 ? totalAmount / totalPayments : 0
-
-  const { data: pendingPayments } = await supabase
-    .from("payments")
-    .select("*", { count: "exact" })
-    .eq("status", "pending")
-
-  const pendingCount = pendingPayments?.length || 0
-
   // Obtener todos los pagos
   const allPayments = await getPayments()
+
+  // Estadísticas de pagos (calculadas sobre los datos mock)
+  const totalPayments = allPayments.length
+  const totalAmount = allPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+  const averageAmount = totalPayments > 0 ? totalAmount / totalPayments : 0
+  const pendingCount = allPayments.filter((p) => p.status === "pending").length
 
   // Obtener pagos por estado
   const completedPayments = await getPaymentsByStatus("completed")

@@ -1,99 +1,70 @@
-import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/types/supabase"
+import { mockTickets, findClient, genId, type MockTicket } from "@/lib/mock-data"
 
 export type SupportTicket = Database["public"]["Tables"]["support_tickets"]["Row"]
 export type SupportTicketInsert = Database["public"]["Tables"]["support_tickets"]["Insert"]
 export type SupportTicketUpdate = Database["public"]["Tables"]["support_tickets"]["Update"]
 
+function withClient(ticket: MockTicket): MockTicket {
+  return { ...ticket, clients: findClient(ticket.client_id) }
+}
+
 export async function getTickets() {
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .select("*, clients(*)")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching tickets:", error)
-    throw error
-  }
-
-  return data
+  return mockTickets
+    .map(withClient)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 }
 
 export async function getTicketsByClientId(clientId: string) {
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .select("*")
-    .eq("client_id", clientId)
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error(`Error fetching tickets for client ${clientId}:`, error)
-    throw error
-  }
-
-  return data
+  return mockTickets
+    .filter((t) => t.client_id === clientId)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 }
 
 export async function getTicketsByStatus(status: string) {
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .select("*, clients(*)")
-    .eq("status", status)
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error(`Error fetching tickets with status ${status}:`, error)
-    throw error
-  }
-
-  return data
+  return mockTickets
+    .filter((t) => t.status === status)
+    .map(withClient)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
 }
 
 export async function getTicketById(id: string) {
-  const { data, error } = await supabase.from("support_tickets").select("*, clients(*)").eq("id", id).single()
-
-  if (error) {
-    console.error(`Error fetching ticket with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  const ticket = mockTickets.find((t) => t.id === id)
+  return ticket ? withClient(ticket) : null
 }
 
 export async function createTicket(ticket: SupportTicketInsert) {
-  const { data, error } = await supabase.from("support_tickets").insert(ticket).select().single()
-
-  if (error) {
-    console.error("Error creating ticket:", error)
-    throw error
+  const nowIso = new Date().toISOString()
+  const newTicket: MockTicket = {
+    id: genId("ticket"),
+    client_id: ticket.client_id,
+    type: ticket.type,
+    description: ticket.description,
+    status: ticket.status ?? "open",
+    priority: ticket.priority ?? "medium",
+    assigned_to: ticket.assigned_to ?? null,
+    resolution: ticket.resolution ?? null,
+    created_at: nowIso,
+    updated_at: nowIso,
+    resolved_at: ticket.resolved_at ?? null,
   }
-
-  return data
+  mockTickets.unshift(newTicket)
+  return newTicket
 }
 
 export async function updateTicket(id: string, ticket: SupportTicketUpdate) {
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .update({ ...ticket, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single()
-
-  if (error) {
-    console.error(`Error updating ticket with id ${id}:`, error)
-    throw error
-  }
-
-  return data
+  const index = mockTickets.findIndex((t) => t.id === id)
+  if (index === -1) throw new Error(`Ticket with id ${id} not found`)
+  mockTickets[index] = {
+    ...mockTickets[index],
+    ...ticket,
+    updated_at: new Date().toISOString(),
+  } as MockTicket
+  return mockTickets[index]
 }
 
 export async function deleteTicket(id: string) {
-  const { error } = await supabase.from("support_tickets").delete().eq("id", id)
-
-  if (error) {
-    console.error(`Error deleting ticket with id ${id}:`, error)
-    throw error
-  }
-
+  const index = mockTickets.findIndex((t) => t.id === id)
+  if (index !== -1) mockTickets.splice(index, 1)
   return true
 }
