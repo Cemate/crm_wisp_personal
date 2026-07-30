@@ -12,7 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LucideUser, LucideSettings, LucideLogOut, LucideShieldCheck, LucideChevronDown } from "lucide-react"
+import {
+  LucideUser,
+  LucideSettings,
+  LucideLogOut,
+  LucideShieldCheck,
+  LucideChevronDown,
+  LucideLifeBuoy,
+} from "lucide-react"
 import { currentUser, getInitials } from "@/lib/mock-account"
 
 export function UserAccountNav() {
@@ -55,6 +62,12 @@ export function UserAccountNav() {
           <Link href="/dashboard/settings" className="cursor-pointer gap-2">
             <LucideSettings className="h-4 w-4" aria-hidden="true" />
             Configuración
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="sm:hidden">
+          <Link href="/dashboard/help" className="cursor-pointer gap-2">
+            <LucideLifeBuoy className="h-4 w-4" aria-hidden="true" />
+            Centro de Ayuda
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

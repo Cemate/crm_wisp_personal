@@ -8,10 +8,26 @@ import Link from "next/link"
 import { LucidePlus, LucideCalendarPlus } from "lucide-react"
 import { SupportTicketsTable } from "@/components/support-tickets-table"
 import { VisitsTable } from "@/components/visits-table"
-import { createClient } from "@/lib/supabase/server"
+import { getTickets } from "@/lib/services/support-service"
+import { getVisits } from "@/lib/services/visit-service"
 
 export default async function SupportPage() {
-  const supabase = await createClient()
+  const tickets = await getTickets()
+  const visits = await getVisits()
+
+  const ticketStats = {
+    total: tickets.length,
+    open: tickets.filter((t) => t.status === "open").length,
+    inProgress: tickets.filter((t) => t.status === "in_progress").length,
+    resolved: tickets.filter((t) => t.status === "resolved").length,
+  }
+
+  const visitStats = {
+    total: visits.length,
+    scheduled: visits.filter((v) => v.status === "scheduled").length,
+    inProgress: visits.filter((v) => v.status === "in_progress").length,
+    completed: visits.filter((v) => v.status === "completed").length,
+  }
 
   return (
     <DashboardShell>
@@ -45,11 +61,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Total Incidencias</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <TicketCount supabase={supabase} />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{ticketStats.total}</div>
               </CardContent>
             </Card>
             <Card>
@@ -57,11 +69,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <TicketCountByStatus supabase={supabase} status="pending" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{ticketStats.open}</div>
               </CardContent>
             </Card>
             <Card>
@@ -69,11 +77,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">En Proceso</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <TicketCountByStatus supabase={supabase} status="in_progress" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{ticketStats.inProgress}</div>
               </CardContent>
             </Card>
             <Card>
@@ -81,11 +85,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Resueltas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <TicketCountByStatus supabase={supabase} status="resolved" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{ticketStats.resolved}</div>
               </CardContent>
             </Card>
           </div>
@@ -102,11 +102,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Total Visitas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <VisitCount supabase={supabase} />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{visitStats.total}</div>
               </CardContent>
             </Card>
             <Card>
@@ -114,11 +110,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Programadas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <VisitCountByStatus supabase={supabase} status="scheduled" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{visitStats.scheduled}</div>
               </CardContent>
             </Card>
             <Card>
@@ -126,11 +118,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">En Proceso</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <VisitCountByStatus supabase={supabase} status="in_progress" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{visitStats.inProgress}</div>
               </CardContent>
             </Card>
             <Card>
@@ -138,11 +126,7 @@ export default async function SupportPage() {
                 <CardTitle className="text-sm font-medium">Completadas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  <Suspense fallback={<div>Cargando...</div>}>
-                    <VisitCountByStatus supabase={supabase} status="completed" />
-                  </Suspense>
-                </div>
+                <div className="text-2xl font-bold">{visitStats.completed}</div>
               </CardContent>
             </Card>
           </div>
@@ -154,34 +138,4 @@ export default async function SupportPage() {
       </Tabs>
     </DashboardShell>
   )
-}
-
-async function TicketCount({ supabase }: { supabase: any }) {
-  const { count } = await supabase.from("support_tickets").select("*", { count: "exact", head: true })
-
-  return count || 0
-}
-
-async function TicketCountByStatus({ supabase, status }: { supabase: any; status: string }) {
-  const { count } = await supabase
-    .from("support_tickets")
-    .select("*", { count: "exact", head: true })
-    .eq("status", status)
-
-  return count || 0
-}
-
-async function VisitCount({ supabase }: { supabase: any }) {
-  const { count } = await supabase.from("technical_visits").select("*", { count: "exact", head: true })
-
-  return count || 0
-}
-
-async function VisitCountByStatus({ supabase, status }: { supabase: any; status: string }) {
-  const { count } = await supabase
-    .from("technical_visits")
-    .select("*", { count: "exact", head: true })
-    .eq("status", status)
-
-  return count || 0
 }

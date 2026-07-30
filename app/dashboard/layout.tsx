@@ -4,6 +4,7 @@ import { DashboardNav } from "@/components/dashboard-nav"
 import { MobileNav } from "@/components/mobile-nav"
 import { UserAccountNav } from "@/components/user-account-nav"
 import Link from "next/link"
+import { LucideLifeBuoy } from "lucide-react"
 
 export default function DashboardLayout({
   children,
@@ -22,7 +23,10 @@ export default function DashboardLayout({
           </div>
           <nav className="flex items-center gap-4">
             <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
-              <Link href="/dashboard/support">Soporte</Link>
+              <Link href="/dashboard/help">
+                <LucideLifeBuoy className="mr-2 h-4 w-4" />
+                Ayuda
+              </Link>
             </Button>
             <UserAccountNav />
           </nav>
