@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import type React from "react"
 import { DashboardNav } from "@/components/dashboard-nav"
 import { MobileNav } from "@/components/mobile-nav"
+import { UserAccountNav } from "@/components/user-account-nav"
 import Link from "next/link"
 
 export default function DashboardLayout({
@@ -20,12 +21,10 @@ export default function DashboardLayout({
             </Link>
           </div>
           <nav className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              Soporte
+            <Button variant="outline" size="sm" className="hidden sm:flex" asChild>
+              <Link href="/dashboard/support">Soporte</Link>
             </Button>
-            <Button variant="outline" size="sm">
-              Mi Cuenta
-            </Button>
+            <UserAccountNav />
           </nav>
         </div>
       </header>
